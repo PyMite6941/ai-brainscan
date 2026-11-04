@@ -1,5 +1,5 @@
 {
-	"name": "@pymite6941/ai-brainscan",
+	"name": "@ai-clyde/ai-brainscan",
 	"version": "0.1.0",
 	"description": "Watch a language model think, layer by layer. npm launcher for the ai-brainscan Python toolkit.",
 	"license": "Apache-2.0",
@@ -31,7 +31,8 @@
 		"web": "node bin/brainscan.js web",
 		"tui": "node bin/brainscan.js tui",
 		"doctor": "node bin/brainscan.js doctor",
-		"test": "node bin/brainscan.js --python -m pytest -q"
+		"test": "node bin/brainscan.js --python -m pytest -q",
+		"prepublishOnly": "node -e \"const fs=require('fs');['src/brainscan','src/brainscan/analysis','src/brainscan/modules','src/brainscan/ui'].forEach(d=>fs.rmSync(d+'/__pycache__',{recursive:true,force:true}))\""
 	},
 	"keywords": [
 		"interpretability",
