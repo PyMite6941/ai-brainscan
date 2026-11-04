@@ -28,3 +28,9 @@ dist/
 .ruff_cache/
 .ipynb_checkpoints/
 .gradio/
+
+# internal working docs (not shipped): CLAUDE.md is agent instructions,
+# docs/DEVLOG.md and docs/MODULES.md are team working notes.
+CLAUDE.md
+docs/DEVLOG.md
+docs/MODULES.md
