@@ -1,0 +1,33 @@
+{
+  "name": "ai-brainscan",
+  "version": "0.1.0",
+  "description": "Watch a language model think, layer by layer. npm launcher for the ai-brainscan Python toolkit.",
+  "license": "Apache-2.0",
+  "author": "Matt Gresham",
+  "bin": {
+    "brainscan": "bin/brainscan.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "os": ["win32", "darwin", "linux"],
+  "files": [
+    "bin/",
+    "src/",
+    "scripts/",
+    "pyproject.toml",
+    "README.md",
+    "LICENSE",
+    ".env.example"
+  ],
+  "scripts": {
+    "install-py": "node bin/brainscan.js install",
+    "setup": "node bin/brainscan.js setup",
+    "start": "node bin/brainscan.js web",
+    "web": "node bin/brainscan.js web",
+    "tui": "node bin/brainscan.js tui",
+    "doctor": "node bin/brainscan.js doctor",
+    "test": "node bin/brainscan.js --python -m pytest -q"
+  },
+  "keywords": ["interpretability", "llm", "logit-lens", "jailbreak", "ai-safety", "activations"]
+}

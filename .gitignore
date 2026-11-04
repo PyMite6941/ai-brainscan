@@ -1,0 +1,30 @@
+# env
+.venv/
+.env
+node_modules/
+
+# model weights: never commit, never sync. they download at runtime.
+models/
+*.safetensors
+*.gguf
+*.bin
+*.pt
+
+# captured scans get huge fast. artifacts/ is the seam between capture and the UIs.
+artifacts/
+*.npy
+*.npz
+*.parquet
+
+# never commit elicited harmful outputs. labels + hashes only.
+outputs/raw/
+
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.gradio/

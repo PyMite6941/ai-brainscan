@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-brainscan"
+version = "0.1.0"
+description = "An open instrument for watching what happens inside a language model, layer by layer, from prompt to answer."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+authors = [{ name = "Matt Gresham" }]
+keywords = ["interpretability", "llm", "jailbreak", "activations", "logit-lens", "safety"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# torch is deliberately NOT listed: the install scripts pick the right wheel
+# (CPU index on Windows/Linux, default on macOS, CUDA with --gpu).
+dependencies = [
+  "transformers>=4.56",
+  "huggingface_hub>=0.30",
+  "safetensors",
+  "accelerate",
+  "numpy",
+  "typer>=0.12",
+  "rich>=13",
+  "python-dotenv",
+]
+
+[project.optional-dependencies]
+web = ["gradio>=5", "plotly"]
+tui = ["textual>=0.80"]
+# white-box interpretability (reads activations directly)
+whitebox = ["transformer-lens", "nnsight", "sae-lens"]
+# black-box modules: each is heavy and pins its own deps.
+# install one at a time, ideally in its own venv, see docs/MODULES.md
+guardrails = ["llm-guard"]
+nemo = ["nemoguardrails"]
+guardrails-ai = ["guardrails-ai"]
+eval = ["inspect-ai"]
+garak = ["garak"]
+pyrit = ["pyrit"]
+dev = ["pytest>=8", "ruff"]
+# what the install scripts install by default
+default = ["ai-brainscan[web,tui]"]
+
+[project.scripts]
+brainscan = "brainscan.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: loads a real model from the HF cache"]
+
+[tool.ruff]
+line-length = 100
