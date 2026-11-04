@@ -131,9 +131,11 @@ def capture(
     attn: bool = typer.Option(False, "--attn", help="also save attention patterns"),
     generate: int = typer.Option(0, "--generate", "-g", help="generate N tokens and judge refused/complied"),
     keep_output: bool = typer.Option(False, "--keep-output", help="store generated text (gitignored)"),
+    module: list[str] = typer.Option(None, "--module", help="run a module after capture (e.g. llama_guard, llm_guard). repeatable"),  # noqa: B008
 ):
     """Run one prompt through the model and save a scan to artifacts/."""
     from brainscan.capture import capture as run
+    from brainscan.modules import REGISTRY, RunContext
 
     model = model or config.default_model()
     p: str | list = prompt
@@ -147,6 +149,35 @@ def capture(
     if scan.meta.verdict:
         console.print(f"verdict (heuristic): {scan.meta.verdict}")
     console.print(scan.meta.scan_id)
+
+    if module:
+        ctx = RunContext(
+            prompt=scan.meta.prompt,
+            model_id=model,
+            output_text=scan.meta.output_text,
+            scan=scan,
+        )
+        for key in module:
+            try:
+                mod = REGISTRY[key]
+            except KeyError:
+                console.print(f"[red]unknown module {key!r}; known: {', '.join(REGISTRY)}[/]")
+                continue
+            if not mod.available():
+                console.print(f"[yellow]{key}[/] not installed: {mod.install_hint()}")
+                continue
+            with console.status(f"running module {key} ..."):
+                try:
+                    result = mod.run(ctx)
+                    scan.save_module_result(result)
+                    console.print(
+                        f"[green]module {key}[/]: verdict={result.verdict} "
+                        f"score={result.score}"
+                    )
+                except NotImplementedError as e:
+                    console.print(f"[yellow]{key}[/]: adapter not implemented ({e})")
+                except Exception as e:  # noqa: BLE001 - report module errors, keep going
+                    console.print(f"[red]{key}[/]: error: {e}")
 
 
 @app.command("list")

@@ -7,7 +7,8 @@ view is explained against: "the classifier says this complied" is the label;
 
 from __future__ import annotations
 
-from brainscan.modules.base import BrainModule, ModuleInfo
+from brainscan.contracts import ModuleResult
+from brainscan.modules.base import BrainModule, ModuleInfo, RunContext
 
 # ---------------------------------------------------------------- guardrails
 
@@ -24,6 +25,52 @@ class LLMGuard(BrainModule):
         what="Input/output scanners (prompt injection, toxicity, secrets) with scores",
     )
 
+    _INPUT_SCANNERS = ("PromptInjection", "Toxicity", "TokenLimit")
+    _OUTPUT_SCANNERS = ("NoRefusal", "Relevance", "Sensitive")
+
+    def run(self, ctx: RunContext) -> ModuleResult:
+        from llm_guard import scan_output, scan_prompt
+        from llm_guard.input_scanners import (
+            PromptInjection,
+            TokenLimit,
+            Toxicity,
+        )
+        from llm_guard.output_scanners import NoRefusal, Relevance, Sensitive
+
+        input_scanners = [PromptInjection(), Toxicity(), TokenLimit()]
+        _, results_valid, results_score = scan_prompt(input_scanners, ctx.prompt)
+        input_valid = all(results_valid.values())
+        input_details = {k: bool(v) for k, v in results_valid.items()}
+        input_scores = {k: float(v) for k, v in results_score.items()}
+
+        output_valid = True
+        output_details = {}
+        output_scores = {}
+        if ctx.output_text:
+            output_scanners = [NoRefusal(), Relevance(), Sensitive()]
+            _, out_valid, out_score = scan_output(
+                output_scanners, ctx.prompt, ctx.output_text
+            )
+            output_valid = all(out_valid.values())
+            output_details = {k: bool(v) for k, v in out_valid.items()}
+            output_scores = {k: float(v) for k, v in out_score.items()}
+
+        verdict = "pass" if input_valid and output_valid else "flag"
+        return ModuleResult(
+            module=self.info.key,
+            category=self.info.category,
+            verdict=verdict,
+            score=1.0 if verdict == "pass" else 0.0,
+            details={
+                "input_valid": input_valid,
+                "input_scanners": input_details,
+                "input_scores": input_scores,
+                "output_valid": output_valid,
+                "output_scanners": output_details,
+                "output_scores": output_scores,
+            },
+        )
+
 
 class NeMoGuardrails(BrainModule):
     info = ModuleInfo(
@@ -37,6 +84,12 @@ class NeMoGuardrails(BrainModule):
         what="Programmable dialogue rails (Colang); jailbreak + topic checks",
     )
 
+    def run(self, ctx: RunContext) -> ModuleResult:
+        raise NotImplementedError(
+            "NeMo Guardrails adapter: needs a Colang config pointing at the "
+            "local model. See docs/MODULES.md."
+        )
+
 
 class GuardrailsAI(BrainModule):
     info = ModuleInfo(
@@ -49,6 +102,12 @@ class GuardrailsAI(BrainModule):
         url="https://github.com/guardrails-ai/guardrails",
         what="Validators from the Guardrails Hub run over outputs",
     )
+
+    def run(self, ctx: RunContext) -> ModuleResult:
+        raise NotImplementedError(
+            "Guardrails AI adapter: install a validator from the Guardrails Hub "
+            "and run it over ctx.output_text. See docs/MODULES.md."
+        )
 
 
 # ---------------------------------------------------------------- classifiers
@@ -68,6 +127,60 @@ class LlamaGuard(BrainModule):
         what="Safe/unsafe + hazard category for a prompt or a response",
     )
 
+    DEFAULT_MODEL = "meta-llama/Llama-Guard-3-1B"
+
+    def run(self, ctx: RunContext) -> ModuleResult:
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
+        model_id = ctx.options.get("model_id", self.DEFAULT_MODEL)
+        text = ctx.output_text or ctx.prompt
+        if not text:
+            return ModuleResult(
+                module=self.info.key,
+                category=self.info.category,
+                verdict="error",
+                score=None,
+                details={"error": "no text to classify"},
+            )
+
+        tok = AutoTokenizer.from_pretrained(model_id)
+        model = AutoModelForCausalLM.from_pretrained(model_id)
+        model.eval()
+
+        conversation = [
+            {"role": "user", "content": [{"type": "text", "text": text}]}
+        ]
+        input_ids = tok.apply_chat_template(
+            conversation, return_tensors="pt"
+        )
+        prompt_len = input_ids.shape[1]
+
+        with torch.no_grad():
+            output = model.generate(
+                input_ids, max_new_tokens=20, pad_token_id=tok.pad_token_id or 0
+            )
+        generated = output[:, prompt_len:]
+        result = tok.decode(generated[0], skip_special_tokens=True).strip()
+
+        lines = [ln.strip() for ln in result.split("\n") if ln.strip()]
+        label = lines[0].lower() if lines else "unknown"
+        categories = [ln for ln in lines[1:] if ln]
+        verdict = "pass" if label == "safe" else "flag"
+
+        return ModuleResult(
+            module=self.info.key,
+            category=self.info.category,
+            verdict=verdict,
+            score=1.0 if verdict == "pass" else 0.0,
+            details={
+                "label": label,
+                "categories": categories,
+                "model": model_id,
+                "raw": result,
+            },
+        )
+
 
 # ---------------------------------------------------------------- evaluation
 
@@ -84,6 +197,12 @@ class Garak(BrainModule):
         what="Probe library: fires known attack families, reports which got through",
     )
 
+    def run(self, ctx: RunContext) -> ModuleResult:
+        raise NotImplementedError(
+            "garak adapter: run garak as a subprocess against ctx.model_id "
+            "and parse the probe/detector results. See reference.garak.ai."
+        )
+
 
 class PyRIT(BrainModule):
     info = ModuleInfo(
@@ -97,6 +216,12 @@ class PyRIT(BrainModule):
         what="Multi-turn attack orchestration (e.g. Crescendo); feeds persona-drift scans",
     )
 
+    def run(self, ctx: RunContext) -> ModuleResult:
+        raise NotImplementedError(
+            "PyRIT adapter: orchestrate a multi-turn attack (e.g. Crescendo) "
+            "against ctx.model_id and score the outcome. See Azure/PyRIT docs."
+        )
+
 
 class Inspect(BrainModule):
     info = ModuleInfo(
@@ -109,3 +234,9 @@ class Inspect(BrainModule):
         url="https://github.com/UKGovernmentBEIS/inspect_ai",
         what="Reproducible eval harness: datasets, solvers, scorers, logs",
     )
+
+    def run(self, ctx: RunContext) -> ModuleResult:
+        raise NotImplementedError(
+            "Inspect adapter: wrap ctx.prompt as an inspect_ai Task with a "
+            "generate() solver and a safety scorer. See inspect.aisi.org.uk."
+        )
