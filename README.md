@@ -71,8 +71,12 @@ brainscan diff <scan-a> <scan-b>       # layer by layer: where do the two inputs
 ```
 
 Scans can be named by id prefix or by label (`brainscan show neutral`; newest wins if labels repeat).
-The web UI has the same tools: a **Sweep** tab, and **Compare** plots cosine similarity per layer and
-tracks any token's probability through depth for two scans.
+The web UI has the same tools. **Explore** is the layer-analysis view: a layer × token map you can colour
+by the logit lens (the top-1 token each layer would output, written in the cell, coloured by confidence),
+by *layer update* (how much each layer rewrites the residual, which shows where the work happens), by
+residual norm, or by one token's probability. Pick any token position to get its full logit-lens table
+and a through-depth trace. **Sweep** runs prompt sets, and **Compare** plots cosine similarity per layer
+and tracks a token's probability for two scans.
 
 What the bundled sets showed on Gemma 3 1B (CPU, Nov 2026):
 
