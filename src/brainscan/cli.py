@@ -10,6 +10,7 @@ from pathlib import Path
 
 import typer
 from rich.console import Console
+from rich.markup import escape
 from rich.table import Table
 
 from brainscan import __version__, config
@@ -65,7 +66,8 @@ def doctor():
     t.add_row("transformers", transformers.__version__)
     for extra, mod in (("web", "gradio"), ("tui", "textual")):
         have = importlib.util.find_spec(mod) is not None
-        t.add_row(f"[{extra}] {mod}", "ok" if have else f"[yellow]not installed[/] pip install \"ai-brainscan[{extra}]\"")
+        t.add_row(escape(f"[{extra}] {mod}"),
+                  "ok" if have else "[yellow]not installed[/] " + escape(f'pip install "ai-brainscan[{extra}]"'))
     hf = config.hf_home()
     sync = config.synced_folder(hf)
     t.add_row("HF cache", f"{hf}" + (f"  [red]inside {sync}! move it (HF_HOME)[/]" if sync else ""))
@@ -77,7 +79,7 @@ def doctor():
     for col in ("key", "category", "status"):
         mt.add_column(col)
     for m in REGISTRY.values():
-        mt.add_row(m.info.key, m.info.category, "ok" if m.available() else f"[dim]{m.install_hint()}[/]")
+        mt.add_row(m.info.key, m.info.category, "ok" if m.available() else f"[dim]{escape(m.install_hint())}[/]")
     console.print(mt)
 
     scannable = [m for m in local_models() if m.scannable]
@@ -164,7 +166,7 @@ def capture(
                 console.print(f"[red]unknown module {key!r}; known: {', '.join(REGISTRY)}[/]")
                 continue
             if not mod.available():
-                console.print(f"[yellow]{key}[/] not installed: {mod.install_hint()}")
+                console.print(f"[yellow]{key}[/] not installed: {escape(mod.install_hint())}")
                 continue
             with console.status(f"running module {key} ..."):
                 try:
@@ -254,7 +256,7 @@ def web(port: int = typer.Option(7860, "--port"),
     try:
         from brainscan.ui.web import launch
     except ImportError as e:
-        console.print(f"[red]{e}[/]\npip install \"ai-brainscan[web]\"")
+        console.print(f"[red]{escape(str(e))}[/]\n" + escape('pip install "ai-brainscan[web]"'))
         raise typer.Exit(1)
     launch(host=host, port=port, share=share)
 
@@ -265,7 +267,7 @@ def tui():
     try:
         from brainscan.ui.tui import run
     except ImportError as e:
-        console.print(f"[red]{e}[/]\npip install \"ai-brainscan[tui]\"")
+        console.print(f"[red]{escape(str(e))}[/]\n" + escape('pip install "ai-brainscan[tui]"'))
         raise typer.Exit(1)
     run()
 

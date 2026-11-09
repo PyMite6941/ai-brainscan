@@ -17,8 +17,8 @@
 	],
 	"files": [
 		"bin/",
-		"src/",
 		"scripts/",
+		"src/brainscan/**/*.py",
 		"pyproject.toml",
 		"README.md",
 		"LICENSE",
@@ -31,8 +31,7 @@
 		"web": "node bin/brainscan.js web",
 		"tui": "node bin/brainscan.js tui",
 		"doctor": "node bin/brainscan.js doctor",
-		"test": "node bin/brainscan.js --python -m pytest -q",
-		"prepublishOnly": "node -e \"const fs=require('fs');['src/brainscan','src/brainscan/analysis','src/brainscan/modules','src/brainscan/ui'].forEach(d=>fs.rmSync(d+'/__pycache__',{recursive:true,force:true}))\""
+		"test": "node bin/brainscan.js --python -m pytest -q"
 	},
 	"keywords": [
 		"interpretability",
