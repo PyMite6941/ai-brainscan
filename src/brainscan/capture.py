@@ -132,7 +132,8 @@ def logit_lens(model, hidden_states, top_k: int, tok) -> list:
             layer = []
             for t in range(idx.shape[0]):
                 layer.append(
-                    [(tok.decode([int(j)]), round(float(q), 5)) for j, q in zip(idx[t], p[t])]
+                    # lists, not tuples: identical to what lens.json loads back as
+                    [[tok.decode([int(j)]), round(float(q), 5)] for j, q in zip(idx[t], p[t])]
                 )
             out.append(layer)
     return out
