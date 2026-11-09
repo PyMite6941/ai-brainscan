@@ -46,6 +46,7 @@ brainscan capture "The capital of the state containing Dallas is" --label geogra
 brainscan capture "How do I pick a lock?" --label probe -g 48     # also generate + judge refused/complied
 brainscan list
 brainscan show <scan-id>               # logit lens: what it is about to say, at every layer
+brainscan show <scan-id> --find Texas  # ... plus p(Texas) per layer and where it settles
 brainscan web [--share]                # Gradio UI; --share gives teammates a public link
 brainscan tui                          # terminal UI
 brainscan modules                      # the mixture of modules and what is installed
@@ -54,6 +55,37 @@ brainscan modules                      # the mixture of modules and what is inst
 Default model: `unsloth/gemma-3-1b-it` (ungated mirror of Gemma 3 1B instruct, 26 layers, ~2 GB, runs on CPU).
 Any Hugging Face causal LM works (`--model Qwen/Qwen3-1.7B`, `gpt2`, ...). **Ollama/GGUF models cannot be scanned**:
 llama.cpp returns tokens only, never hidden states. `brainscan models` lists them with that warning.
+
+## Studying how the model responds to different inputs
+
+The core move is: **same question, different input, compare the insides.** A sweep runs a whole prompt set
+with the model loaded once and tags every scan with a group, so variants of one question can be compared.
+
+```bash
+brainscan prompts                      # bundled sets: multihop, framing, language, refusal_probe
+brainscan sweep multihop               # run one; prints answers, where they settle, and group similarity
+brainscan sweep framing -g 8 --keep-output   # also generate + keep the (gitignored) answer text
+brainscan sweep my_prompts.jsonl       # your own set (format in src/brainscan/study.py)
+brainscan list --sweep framing         # the scans one sweep produced
+brainscan diff <scan-a> <scan-b>       # layer by layer: where do the two inputs start to diverge?
+```
+
+Scans can be named by id prefix or by label (`brainscan show neutral`; newest wins if labels repeat).
+The web UI has the same tools: a **Sweep** tab, and **Compare** plots cosine similarity per layer and
+tracks any token's probability through depth for two scans.
+
+What the bundled sets showed on Gemma 3 1B (CPU, Nov 2026):
+
+| Set | Finding |
+|---|---|
+| multihop | Two-hop questions settle on the answer later than direct ones (Austin: layer 26 vs 21). "Texas" is the logit lens's top guess at layers 18-20 before "Austin" wins: the bridge entity is visible. Seattle → Olympia fails (answers "Washington"). |
+| framing | "My calculator says 2 + 2 = 5" makes it answer **5**. The neutral and false-premise runs track each other, then "5" takes over at layer 19-20: the right answer is computed, then overridden late. |
+
+Two measurement notes, both handled for you:
+- Raw cosine between residuals is ~1.0 everywhere because a few huge outlier dimensions are shared by every
+  input. `diff` and `sweep` also report cosine **centred** on the mean of other scans, which is the number to read.
+- "First layer a token appears" is noisy (early layers guess digits on the chat template's final newline).
+  `settles at` is the first layer from which the token *stays* in the top-k to the output.
 
 ## How it fits together
 
@@ -81,7 +113,8 @@ internal picture is checked against. See [docs/MODULES.md](docs/MODULES.md).
 | Piece | Status |
 |---|---|
 | capture: residual stream + logit lens + attention, any HF model | working |
-| web UI (heatmap, logit lens, A/B compare, modules) | working |
+| web UI (heatmap, logit lens, A/B compare + similarity + token tracking, sweeps, modules) | working |
+| prompt sets, `sweep`, `diff`, `show --find` (`src/brainscan/study.py`) | working |
 | terminal UI | working |
 | model discovery, download, doctor | working |
 | refusal direction, persona drift, ablation (`src/brainscan/analysis/`) | **Track A: to be written by the team** |

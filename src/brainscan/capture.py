@@ -35,8 +35,16 @@ def load_model(model_id: str, dtype: str = "auto", device: str = "cpu"):
     key = (model_id, dtype)
     if key in _CACHE:
         return _CACHE[key]
+    import os
+
+    os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
     import torch
+    import transformers
     from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    # keep CLI output readable: no weight-loading bars or generation-config chatter
+    transformers.logging.set_verbosity_error()
+    transformers.logging.disable_progress_bar()
 
     if dtype == "auto":
         # float32 on CPU is the safe default: bf16 matmuls are slow or missing

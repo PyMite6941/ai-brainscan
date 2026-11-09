@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typer.testing import CliRunner
 
+from brainscan import __version__
 from brainscan.cli import app
 
 runner = CliRunner()
@@ -12,7 +13,7 @@ runner = CliRunner()
 def test_version_prints_version():
     result = runner.invoke(app, ["version"])
     assert result.exit_code == 0
-    assert "0.1.0" in result.output
+    assert __version__ in result.output
 
 
 def test_modules_output_contains_whitebox_and_garak():

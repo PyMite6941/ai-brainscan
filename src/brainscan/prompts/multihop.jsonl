@@ -1,0 +1,14 @@
+# Multi-hop recall. Does the model compute the bridge entity (state, country) in a middle layer
+# before the final answer? Compare each "hop2" against its "direct" control with `brainscan diff`,
+# and check `brainscan show <scan> --find <bridge>` for when the bridge shows up.
+# Raw (no chat template) so the next token is the answer.
+{"prompt": "Fact: the capital of the state containing Dallas is", "label": "hop2", "group": "texas", "chat": false, "expect": "Austin"}
+{"prompt": "Fact: the capital of Texas is", "label": "direct", "group": "texas", "chat": false, "expect": "Austin"}
+{"prompt": "Fact: the capital of the state containing Seattle is", "label": "hop2", "group": "washington", "chat": false, "expect": "Olympia"}
+{"prompt": "Fact: the capital of Washington state is", "label": "direct", "group": "washington", "chat": false, "expect": "Olympia"}
+{"prompt": "Fact: the currency of the country where the Eiffel Tower stands is the", "label": "hop2", "group": "france", "chat": false, "expect": "euro"}
+{"prompt": "Fact: the currency of France is the", "label": "direct", "group": "france", "chat": false, "expect": "euro"}
+{"prompt": "Fact: the language spoken in the country whose capital is Tokyo is", "label": "hop2", "group": "japan", "chat": false, "expect": "Japanese"}
+{"prompt": "Fact: the language spoken in Japan is", "label": "direct", "group": "japan", "chat": false, "expect": "Japanese"}
+{"prompt": "Fact: the continent where the Amazon river flows is", "label": "hop2", "group": "brazil", "chat": false, "expect": "South"}
+{"prompt": "Fact: Brazil is on the continent of", "label": "direct", "group": "brazil", "chat": false, "expect": "South"}

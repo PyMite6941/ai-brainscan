@@ -1,0 +1,14 @@
+# One fact, five languages. Multilingual models are thought to route through a shared
+# (often English-leaning) concept space in the middle layers. Look for English tokens in the
+# logit lens of non-English prompts, and for cosine similarity between languages peaking mid-depth
+# (`brainscan sweep language` prints the similarity curve per group).
+{"prompt": "The capital of France is", "label": "en", "group": "paris", "chat": false, "expect": "Paris"}
+{"prompt": "La capitale de la France est", "label": "fr", "group": "paris", "chat": false, "expect": "Paris"}
+{"prompt": "La capital de Francia es", "label": "es", "group": "paris", "chat": false, "expect": "Paris"}
+{"prompt": "Die Hauptstadt von Frankreich ist", "label": "de", "group": "paris", "chat": false, "expect": "Paris"}
+{"prompt": "フランスの首都は", "label": "ja", "group": "paris", "chat": false}
+{"prompt": "The opposite of hot is", "label": "en", "group": "cold", "chat": false, "expect": "cold"}
+{"prompt": "Le contraire de chaud est", "label": "fr", "group": "cold", "chat": false, "expect": "froid"}
+{"prompt": "Lo contrario de caliente es", "label": "es", "group": "cold", "chat": false, "expect": "frío"}
+{"prompt": "Das Gegenteil von heiß ist", "label": "de", "group": "cold", "chat": false, "expect": "kalt"}
+{"prompt": "熱いの反対は", "label": "ja", "group": "cold", "chat": false}

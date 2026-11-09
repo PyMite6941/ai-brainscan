@@ -1,6 +1,6 @@
 {
 	"name": "@ai-clyde/ai-brainscan",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Watch a language model think, layer by layer. npm launcher for the ai-brainscan Python toolkit.",
 	"license": "Apache-2.0",
 	"author": "PyMite6941 <greshamd27@gmail.com>",
@@ -19,6 +19,7 @@
 		"bin/",
 		"scripts/",
 		"src/brainscan/**/*.py",
+		"src/brainscan/prompts/*.jsonl",
 		"pyproject.toml",
 		"README.md",
 		"LICENSE",
