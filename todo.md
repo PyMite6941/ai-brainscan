@@ -5,8 +5,8 @@ Source of truth for open work: `docs/DEVLOG.md` ("Open" section). Track A (`src/
 ## npm / GitHub setup
 - [x] npm: `files` whitelists `src/brainscan/**/*.py` so `__pycache__`/`egg-info` never ship (npm ignores `.npmignore` inside `files` entries); `npm pack` → 33 files, clean
 - [x] commit + push to `PyMite6941/ai-brainscan` main
-- [ ] GitHub: branch protection on main (require PR + 1 review, dismiss stale, resolve conversation; no status checks — no CI yet)
-- [ ] `npm publish --access public` (needs `npm login` with access to the `@ai-clyde` org)
+- [x] GitHub: branch protection on main (require PR + 1 review, dismiss stale, resolve conversation; no status checks — no CI yet; admins can bypass)
+- [ ] npm: 0.1.0 is already on the registry (with the pyc/egg-info junk). Bump to 0.1.1 and `npm publish --access public` — needs `npm login` with `@ai-clyde` org access
 
 ## Verification
 - [x] `python -m pytest -q` green (23 passed — gpt2 test needs gpt2 in HF cache)
